@@ -1,0 +1,100 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 0. Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- Helpers ---
+    function isSignedIn() { return request.auth != null; }
+    function isEmailVerified() { return request.auth.token.email_verified == true; }
+    function userId() { return request.auth.uid; }
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+    function getProfile() {
+      return get(/databases/$(database)/documents/users/$(userId())).data;
+    }
+    function hasRole(role) {
+      return isSignedIn() && getProfile().role == role;
+    }
+    function isOwner() { return hasRole('DONO'); }
+    function isBoss() { return isOwner() || hasRole('CHEFE'); }
+    function isValidId(id) { 
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); 
+    }
+
+    // --- Validation Helpers ---
+    function isValidUser(data) {
+      return data.keys().hasAll(['uid', 'email', 'role', 'createdAt']) &&
+             data.uid == userId() &&
+             data.email is string &&
+             data.role in ['DONO', 'CHEFE', 'OPERADOR'];
+    }
+
+    function isValidServico(data) {
+      return data.keys().hasAll(['clienteId', 'areaHectares', 'cultura', 'status']) &&
+             data.areaHectares > 0 &&
+             data.status in ['PENDENTE', 'CONCLUIDO'] &&
+             isValidId(data.clienteId);
+    }
+
+    // --- Collections ---
+
+    // Users: Profiles
+    match /users/{uid} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && uid == userId() && isValidUser(incoming());
+      allow update: if isSignedIn() && (
+        (uid == userId() && incoming().diff(existing()).affectedKeys().hasOnly(['displayName'])) ||
+        isOwner()
+      );
+    }
+
+    // Clientes
+    match /clientes/{id} {
+      allow read: if isSignedIn();
+      allow write: if isBoss();
+    }
+
+    // Drones
+    match /drones/{id} {
+      allow read: if isSignedIn();
+      allow write: if isBoss();
+    }
+
+    // Produtos
+    match /produtos/{id} {
+      allow read: if isSignedIn();
+      allow write: if isBoss();
+    }
+
+    // Servicos
+    match /servicos/{id} {
+      allow list: if isSignedIn() && (
+        isBoss() || 
+        userId() in existing().operadoresIds
+      );
+      allow get: if isSignedIn();
+      
+      allow create: if isBoss() && isValidServico(incoming());
+      
+      allow update: if isSignedIn() && (
+        isBoss() ||
+        (userId() in existing().operadoresIds && 
+         incoming().diff(existing()).affectedKeys().hasOnly(['status']) &&
+         existing().status == 'PENDENTE'
+        )
+      );
+      
+      allow delete: if isOwner();
+    }
+
+    // Comissoes
+    match /comissoes/{id} {
+      allow read: if isSignedIn() && (isBoss() || existing().operadorId == userId());
+      allow create: if isBoss();
+      allow update: if isOwner() && incoming().diff(existing()).affectedKeys().hasOnly(['pago']);
+    }
+  }
+}

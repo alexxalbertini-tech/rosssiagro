@@ -1,0 +1,119 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile and role information",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string" },
+        "displayName": { "type": "string" },
+        "role": { "type": "string", "enum": ["DONO", "CHEFE", "OPERADOR"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email", "role"]
+    },
+    "Cliente": {
+      "title": "Cliente",
+      "description": "Customer information",
+      "type": "object",
+      "properties": {
+        "nome": { "type": "string" },
+        "cpfCnpj": { "type": "string" },
+        "telefone": { "type": "string" },
+        "endereco": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["nome"]
+    },
+    "Drone": {
+      "title": "Drone",
+      "description": "Drone equipment information",
+      "type": "object",
+      "properties": {
+        "modelo": { "type": "string" },
+        "marca": { "type": "string" },
+        "capacidadeTanque": { "type": "number" },
+        "autonomia": { "type": "number" },
+        "ativo": { "type": "boolean" }
+      },
+      "required": ["modelo", "capacidadeTanque"]
+    },
+    "Produto": {
+      "title": "Produto",
+      "description": "Chemical products used in spraying",
+      "type": "object",
+      "properties": {
+        "nome": { "type": "string" },
+        "culturaSugestao": { "type": "string" },
+        "dosagemPadrao": { "type": "number" },
+        "unidade": { "type": "string", "enum": ["L", "KG"] }
+      },
+      "required": ["nome", "dosagemPadrao"]
+    },
+    "Servico": {
+      "title": "Servico",
+      "description": "Spraying service record",
+      "type": "object",
+      "properties": {
+        "clienteId": { "type": "string" },
+        "clienteNome": { "type": "string" },
+        "areaHectares": { "type": "number" },
+        "cultura": { "type": "string" },
+        "produtoId": { "type": "string" },
+        "produtoNome": { "type": "string" },
+        "dosagem": { "type": "number" },
+        "droneId": { "type": "string" },
+        "droneModelo": { "type": "string" },
+        "operadoresIds": { "type": "array" },
+        "valorPorHectare": { "type": "number" },
+        "valorTotal": { "type": "number" },
+        "quantidadeProdutoTotal": { "type": "number" },
+        "status": { "type": "string", "enum": ["PENDENTE", "CONCLUIDO"] },
+        "dataServico": { "type": "string", "format": "date-time" },
+        "comissaoTotal": { "type": "number" },
+        "coordenadas": { "type": "array" }
+      },
+      "required": ["clienteId", "areaHectares", "cultura", "produtoId", "droneId", "status"]
+    },
+    "Comissao": {
+      "title": "Comissao",
+      "description": "Commission records for operators",
+      "type": "object",
+      "properties": {
+        "servicoId": { "type": "string" },
+        "operadorId": { "type": "string" },
+        "valor": { "type": "number" },
+        "pago": { "type": "boolean" },
+        "data": { "type": "string", "format": "date-time" }
+      },
+      "required": ["servicoId", "operadorId", "valor"]
+    }
+  },
+  "firestore": {
+    "users": {
+      "schema": "User",
+      "description": "User profiles"
+    },
+    "clientes": {
+      "schema": "Cliente",
+      "description": "Customer list"
+    },
+    "drones": {
+      "schema": "Drone",
+      "description": "Drone fleet"
+    },
+    "produtos": {
+      "schema": "Produto",
+      "description": "Chemical products"
+    },
+    "servicos": {
+      "schema": "Servico",
+      "description": "Spraying operations"
+    },
+    "comissoes": {
+      "schema": "Comissao",
+      "description": "Commission tracking"
+    }
+  }
+}

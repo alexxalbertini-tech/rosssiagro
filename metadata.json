@@ -1,0 +1,6 @@
+{
+  "name": "ROSSIAGRO",
+  "description": "Sistema de Gestão de Pulverização com Drones - Profissional, Offline-first e Integrado.",
+  "requestFramePermissions": ["geolocation"],
+  "majorCapabilities": []
+}
